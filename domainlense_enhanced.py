@@ -19,7 +19,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for modern SaaS design
+# Custom CSS for modern SaaS design with table
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -42,7 +42,7 @@ st.markdown("""
 
     /* Main card container */
     .block-container {
-        max-width: 1000px;
+        max-width: 1200px;
         margin: 0 auto;
         background: white;
         border-radius: 16px;
@@ -57,32 +57,6 @@ st.markdown("""
         color: #111827;
         margin-bottom: 1.5rem !important;
         letter-spacing: -0.02em;
-    }
-
-    /* Sample buttons */
-    .sample-buttons {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 1.5rem;
-        justify-content: flex-end;
-    }
-
-    .sample-btn {
-        background: white;
-        border: 1px solid #E5E7EB;
-        border-radius: 20px;
-        padding: 0.5rem 1rem;
-        font-size: 0.875rem;
-        color: #6B7280;
-        cursor: pointer;
-        transition: all 0.2s;
-        font-weight: 500;
-    }
-
-    .sample-btn:hover {
-        border-color: #5B7FFF;
-        color: #5B7FFF;
-        background: #F0F4FF;
     }
 
     /* Textarea */
@@ -180,10 +154,6 @@ st.markdown("""
         box-shadow: 0 6px 20px rgba(91, 127, 255, 0.4) !important;
     }
 
-    .stButton > button:active {
-        transform: translateY(0) !important;
-    }
-
     /* Section divider */
     .section-divider {
         border-top: 1px solid #F3F4F6;
@@ -196,24 +166,6 @@ st.markdown("""
         font-weight: 600 !important;
         color: #374151 !important;
         margin-bottom: 1rem !important;
-    }
-
-    /* File upload area */
-    .upload-hint {
-        background: #F9FAFB;
-        border: 2px dashed #E5E7EB;
-        border-radius: 12px;
-        padding: 1.5rem;
-        text-align: center;
-        color: #9CA3AF;
-        font-size: 0.9rem;
-        margin-top: 1rem;
-    }
-
-    .upload-hint:hover {
-        border-color: #5B7FFF;
-        background: #F0F4FF;
-        color: #5B7FFF;
     }
 
     /* Success/Info messages */
@@ -230,21 +182,6 @@ st.markdown("""
         border-radius: 10px;
     }
 
-    /* Expander */
-    .streamlit-expanderHeader {
-        background: #F9FAFB !important;
-        border: 1px solid #E5E7EB !important;
-        border-radius: 10px !important;
-        font-weight: 600 !important;
-        color: #374151 !important;
-        padding: 1rem !important;
-    }
-
-    .streamlit-expanderHeader:hover {
-        background: #F0F4FF !important;
-        border-color: #5B7FFF !important;
-    }
-
     /* Metrics */
     [data-testid="stMetricValue"] {
         font-size: 2rem !important;
@@ -258,12 +195,58 @@ st.markdown("""
         font-weight: 600 !important;
     }
 
-    /* Results cards */
-    div[data-testid="stExpander"] {
-        border: 1px solid #E5E7EB;
-        border-radius: 12px;
-        margin-bottom: 0.75rem;
+    /* Filter chips */
+    .filter-chip {
+        display: inline-block;
         background: white;
+        border: 1.5px solid #E5E7EB;
+        border-radius: 20px;
+        padding: 0.5rem 1rem;
+        margin: 0.25rem;
+        font-size: 0.875rem;
+        color: #6B7280;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 500;
+    }
+
+    .filter-chip:hover {
+        border-color: #5B7FFF;
+        color: #5B7FFF;
+        background: #F0F4FF;
+    }
+
+    .filter-chip.active {
+        background: #5B7FFF;
+        border-color: #5B7FFF;
+        color: white;
+    }
+
+    /* Table styles */
+    .dataframe {
+        border: 1px solid #E5E7EB !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+    }
+
+    .dataframe thead tr th {
+        background: #F9FAFB !important;
+        color: #374151 !important;
+        font-weight: 600 !important;
+        font-size: 0.875rem !important;
+        padding: 1rem !important;
+        border-bottom: 2px solid #E5E7EB !important;
+    }
+
+    .dataframe tbody tr td {
+        padding: 1rem !important;
+        border-bottom: 1px solid #F3F4F6 !important;
+        font-size: 0.9rem !important;
+        color: #374151 !important;
+    }
+
+    .dataframe tbody tr:hover {
+        background: #F9FAFB !important;
     }
 
     /* Download button */
@@ -290,30 +273,27 @@ st.markdown("""
         margin-right: 0.5rem;
     }
 
-    /* Spacing system */
-    .spacing-sm { margin-bottom: 0.5rem; }
-    .spacing-md { margin-bottom: 1rem; }
-    .spacing-lg { margin-bottom: 1.5rem; }
-    .spacing-xl { margin-bottom: 2rem; }
-
-    /* Radio buttons - horizontal */
-    .stRadio > div {
-        flex-direction: row !important;
-        gap: 1rem !important;
+    /* Modal styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
-    .stRadio label {
+    .modal-content {
         background: white;
-        border: 1px solid #E5E7EB;
-        border-radius: 20px;
-        padding: 0.5rem 1rem;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .stRadio label:hover {
-        border-color: #5B7FFF;
-        background: #F0F4FF;
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 600px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -321,14 +301,18 @@ st.markdown("""
 # Initialize session state
 if 'results_df' not in st.session_state:
     st.session_state.results_df = None
-if 'show_email_form' not in st.session_state:
-    st.session_state.show_email_form = False
-if 'active_row' not in st.session_state:
-    st.session_state.active_row = None
+if 'show_email_modal' not in st.session_state:
+    st.session_state.show_email_modal = False
+if 'active_email_data' not in st.session_state:
+    st.session_state.active_email_data = None
 if 'domain_input' not in st.session_state:
     st.session_state.domain_input = ""
+if 'selected_categories' not in st.session_state:
+    st.session_state.selected_categories = []
+if 'selected_departments' not in st.session_state:
+    st.session_state.selected_departments = []
 
-# Sample data for quick fill
+# Sample data
 SAMPLES = {
     "SaaS Competitors": """stripe.com
 vercel.com
@@ -509,14 +493,12 @@ with col_title:
     st.markdown("<h1>Domains to Analyze</h1>", unsafe_allow_html=True)
 
 with col_samples:
-    st.markdown('<div class="sample-buttons">', unsafe_allow_html=True)
     cols = st.columns(3)
     for idx, (label, sample_text) in enumerate(SAMPLES.items()):
         with cols[idx]:
             if st.button(label, key=f"sample_{idx}", use_container_width=True):
                 st.session_state.domain_input = sample_text
                 st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # Main input area
 domains_input = st.text_area(
@@ -548,7 +530,7 @@ with col_counter:
         unsafe_allow_html=True
     )
 
-# File upload hint
+# File upload
 uploaded_file = st.file_uploader(
     "upload",
     type=['txt', 'csv'],
@@ -629,33 +611,30 @@ if analyze_button and len(domains_list) > 0:
             progress_bar.progress(processed / len(domains_list))
             status_text.markdown(f"**Processing...** ({processed}/{len(domains_list)} domains)")
 
-    # Build results dataframe
+    # Build results - one row per domain with all emails combined
     rows = []
     for res in results:
+        email_details = []
+        departments = []
+
         if res['emails']:
             for email in res['emails']:
                 dept = classify_email_department(email)
-                rows.append({
-                    'Domain': res['domain'],
-                    'Category': res['category'],
-                    'Score': res['score'],
-                    'Email': email,
-                    'Department': dept,
-                    'Status': res['status']
-                })
-        else:
-            rows.append({
-                'Domain': res['domain'],
-                'Category': res['category'],
-                'Score': res['score'],
-                'Email': 'No emails found',
-                'Department': 'N/A',
-                'Status': res['status']
-            })
+                email_details.append(email)
+                departments.append(dept)
+
+        rows.append({
+            'Domain': res['domain'],
+            'Category': res['category'],
+            'Score': res['score'],
+            'Emails': email_details if email_details else ['No emails found'],
+            'Departments': departments if departments else ['N/A'],
+            'Status': res['status']
+        })
 
     st.session_state.results_df = pd.DataFrame(rows)
     progress_bar.progress(1.0)
-    status_text.success(f"✅ Analysis complete! Found {len([r for r in rows if r['Email'] != 'No emails found'])} emails.")
+    status_text.success(f"✅ Analysis complete! Analyzed {len(results)} domains.")
 
 # Results display
 if st.session_state.results_df is not None:
@@ -667,41 +646,204 @@ if st.session_state.results_df is not None:
     # Metrics
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Domains", df['Domain'].nunique())
+        st.metric("Domains", len(df))
     with col2:
-        valid_emails = df[df['Email'] != 'No emails found']
-        st.metric("Emails", len(valid_emails))
+        total_emails = sum([len([e for e in emails if e != 'No emails found']) for emails in df['Emails']])
+        st.metric("Emails", total_emails)
     with col3:
-        st.metric("Departments", df['Department'].nunique())
+        all_depts = set()
+        for depts in df['Departments']:
+            all_depts.update([d for d in depts if d != 'N/A'])
+        st.metric("Departments", len(all_depts))
     with col4:
         st.metric("Avg Score", f"{df['Score'].mean():.1f}")
 
     st.markdown('<div class="spacing-lg"></div>', unsafe_allow_html=True)
 
-    # Contacts list
-    for idx, row in df.iterrows():
-        if row['Email'] == 'No emails found':
-            continue
+    # Horizontal filter chips - Categories
+    st.markdown("**Filter by Category:**")
+    all_categories = sorted(df['Category'].unique())
 
-        with st.expander(f"📧 {row['Email']} • {row['Domain']} • Score: {row['Score']}/100"):
-            col_a, col_b = st.columns(2)
-            with col_a:
-                st.write(f"**Domain:** {row['Domain']}")
-                st.write(f"**Category:** {row['Category']}")
-                st.write(f"**Score:** ⭐ {row['Score']}/100")
-            with col_b:
-                st.write(f"**Email:** {row['Email']}")
-                st.write(f"**Department:** {row['Department']}")
-                st.write(f"**Status:** {row['Status']}")
+    cols_cat = st.columns(len(all_categories))
+    for idx, category in enumerate(all_categories):
+        with cols_cat[idx]:
+            if st.button(
+                category,
+                key=f"cat_{category}",
+                type="primary" if category in st.session_state.selected_categories else "secondary"
+            ):
+                if category in st.session_state.selected_categories:
+                    st.session_state.selected_categories.remove(category)
+                else:
+                    st.session_state.selected_categories.append(category)
+                st.rerun()
+
+    st.markdown('<div class="spacing-md"></div>', unsafe_allow_html=True)
+
+    # Horizontal filter chips - Departments
+    st.markdown("**Filter by Department:**")
+    all_departments = set()
+    for depts in df['Departments']:
+        all_departments.update([d for d in depts if d != 'N/A'])
+    all_departments = sorted(list(all_departments))
+
+    if all_departments:
+        cols_dept = st.columns(len(all_departments))
+        for idx, dept in enumerate(all_departments):
+            with cols_dept[idx]:
+                dept_label = f"📧 {dept}"
+                if st.button(
+                    dept_label,
+                    key=f"dept_{dept}",
+                    type="primary" if dept in st.session_state.selected_departments else "secondary"
+                ):
+                    if dept in st.session_state.selected_departments:
+                        st.session_state.selected_departments.remove(dept)
+                    else:
+                        st.session_state.selected_departments.append(dept)
+                    st.rerun()
 
     st.markdown('<div class="spacing-lg"></div>', unsafe_allow_html=True)
 
-    # Export
-    csv = df.to_csv(index=False).encode('utf-8')
+    # Filter dataframe
+    filtered_df = df.copy()
+
+    if st.session_state.selected_categories:
+        filtered_df = filtered_df[filtered_df['Category'].isin(st.session_state.selected_categories)]
+
+    if st.session_state.selected_departments:
+        # Filter by departments - check if any email has the selected department
+        mask = filtered_df['Departments'].apply(
+            lambda depts: any(d in st.session_state.selected_departments for d in depts)
+        )
+        filtered_df = filtered_df[mask]
+
+    st.info(f"📊 Showing {len(filtered_df)} domain(s) after filtering")
+
+    # Build table data
+    table_data = []
+    for idx, row in filtered_df.iterrows():
+        domain = row['Domain']
+        category = row['Category']
+
+        # Build contact details column
+        contact_details = []
+        for email, dept in zip(row['Emails'], row['Departments']):
+            if email != 'No emails found':
+                contact_details.append(f"{email} 📧 {dept}")
+            else:
+                contact_details.append("No emails found")
+
+        contact_str = "\n".join(contact_details)
+
+        table_data.append({
+            'Domain': f"[{domain}](https://{domain})",
+            'Category': category,
+            'Contact Details': contact_str,
+            '_emails': row['Emails'],
+            '_departments': row['Departments'],
+            '_domain_raw': domain
+        })
+
+    # Display table
+    if table_data:
+        display_df = pd.DataFrame(table_data)[['Domain', 'Category', 'Contact Details']]
+        st.markdown(display_df.to_markdown(), unsafe_allow_html=True)
+
+        # Email buttons for each contact
+        st.markdown('<div class="spacing-lg"></div>', unsafe_allow_html=True)
+        st.markdown("**💌 Click to Draft Emails:**")
+
+        for idx, row_data in enumerate(table_data):
+            domain_raw = row_data['_domain_raw']
+            emails = row_data['_emails']
+            depts = row_data['_departments']
+
+            if emails and emails[0] != 'No emails found':
+                st.markdown(f"**{domain_raw}:**")
+                email_cols = st.columns(min(len(emails), 4))
+
+                for email_idx, (email, dept) in enumerate(zip(emails, depts)):
+                    with email_cols[email_idx % 4]:
+                        if st.button(f"✉️ {email}", key=f"email_{idx}_{email_idx}"):
+                            st.session_state.show_email_modal = True
+                            st.session_state.active_email_data = {
+                                'domain': domain_raw,
+                                'email': email,
+                                'department': dept,
+                                'company': company_name if company_name else "Your Company",
+                                'purpose': outreach_purpose if outreach_purpose else "collaboration"
+                            }
+                            st.rerun()
+
+    st.markdown('<div class="spacing-lg"></div>', unsafe_allow_html=True)
+
+    # Export button
+    export_rows = []
+    for row in filtered_df.itertuples():
+        for email, dept in zip(row.Emails, row.Departments):
+            export_rows.append({
+                'Domain': row.Domain,
+                'Category': row.Category,
+                'Score': row.Score,
+                'Email': email,
+                'Department': dept
+            })
+
+    export_df = pd.DataFrame(export_rows)
+    csv = export_df.to_csv(index=False).encode('utf-8')
     st.download_button(
-        "📥 Export Results (CSV)",
+        "📥 Export Filtered Results (CSV)",
         csv,
         f"DomainLense_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.csv",
         "text/csv",
         use_container_width=True
     )
+
+# Email Modal
+if st.session_state.show_email_modal and st.session_state.active_email_data:
+    data = st.session_state.active_email_data
+
+    st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+    st.markdown("## ✉️ Draft Outreach Email")
+
+    st.info(f"**To:** {data['email']} | **Domain:** {data['domain']} | **Department:** {data['department']}")
+
+    email_name = data['email'].split('@')[0].replace('.', ' ').title()
+
+    subject = st.text_input(
+        "Subject Line",
+        value=f"Quick {data['purpose']} opportunity for {data['domain']}"
+    )
+
+    body_template = f"""Hi {email_name},
+
+I came across {data['domain']} and was impressed by your content/product.
+
+I'm reaching out from {data['company']} regarding a potential {data['purpose']} opportunity.
+
+[Add your specific value proposition here]
+
+Would you be open to a quick conversation about this?
+
+Best regards,
+Arun Chaudhary
+Marketer at KrispCall"""
+
+    body = st.text_area(
+        "Email Body",
+        value=body_template,
+        height=300
+    )
+
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        if st.button("📋 Copy to Clipboard", use_container_width=True):
+            st.code(f"To: {data['email']}\nSubject: {subject}\n\n{body}")
+            st.success("✅ Email content displayed above - copy manually")
+
+    with col_btn2:
+        if st.button("❌ Close", use_container_width=True):
+            st.session_state.show_email_modal = False
+            st.session_state.active_email_data = None
+            st.rerun()
