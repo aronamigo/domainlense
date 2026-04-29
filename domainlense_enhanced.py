@@ -4,10 +4,18 @@ import pandas as pd
 import time
 import re
 from urllib.parse import urlparse
-import requests
-from bs4 import BeautifulSoup
 import io
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+# Try importing optional dependencies
+try:
+    import requests
+    from bs4 import BeautifulSoup
+    SCRAPING_AVAILABLE = True
+except ImportError:
+    SCRAPING_AVAILABLE = False
+    st.warning("Web scraping features require 'requests' and 'beautifulsoup4'. Install them to enable full functionality.")
+
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -23,20 +31,16 @@ st.set_page_config(
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 
-    /* Global Reset */
     * {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    /* Hide Streamlit branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     .stDeployButton {display: none;}
 
-    /* Main Background */
     .main {
         background: #F7F9FB;
         padding: 0;
@@ -47,7 +51,6 @@ st.markdown("""
         padding: 2rem 2.5rem;
     }
 
-    /* Top App Bar */
     .top-app-bar {
         position: sticky;
         top: 0;
@@ -69,7 +72,6 @@ st.markdown("""
         color: #2563EB;
     }
 
-    /* Hero Section */
     .hero-section {
         text-align: center;
         margin-bottom: 3rem;
@@ -92,7 +94,6 @@ st.markdown("""
         line-height: 1.5;
     }
 
-    /* Main Card */
     .main-card {
         background: white;
         border-radius: 0.75rem;
@@ -102,7 +103,6 @@ st.markdown("""
         margin-bottom: 2rem;
     }
 
-    /* Label Caps */
     .label-caps {
         font-size: 0.75rem;
         font-weight: 600;
@@ -112,32 +112,6 @@ st.markdown("""
         margin-bottom: 1rem;
     }
 
-    /* Sample Buttons */
-    .sample-buttons {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-
-    .sample-btn {
-        background: #DAE2FD;
-        color: #5C647A;
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.875rem;
-        font-weight: 500;
-        border: none;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .sample-btn:hover {
-        background: rgba(195, 198, 215, 0.4);
-    }
-
-    /* Textarea */
     .stTextArea textarea {
         font-family: 'Consolas', 'Monaco', monospace !important;
         font-size: 0.875rem !important;
@@ -157,25 +131,20 @@ st.markdown("""
         outline: none !important;
     }
 
-    /* Domain Counter Badge */
     .domain-counter {
-        position: absolute;
-        bottom: 1rem;
-        right: 1rem;
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(8px);
+        text-align: right;
+        background: rgba(255, 255, 255, 0.9);
         padding: 0.25rem 0.75rem;
         border-radius: 0.375rem;
         border: 1px solid #C3C6D7;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         font-size: 0.75rem;
         font-weight: 600;
         letter-spacing: 0.05em;
         text-transform: uppercase;
         color: #434655;
+        margin-top: -0.5rem;
     }
 
-    /* Helper Text */
     .helper-text {
         display: flex;
         align-items: center;
@@ -185,7 +154,6 @@ st.markdown("""
         margin-bottom: 2rem;
     }
 
-    /* Text Inputs */
     .stTextInput input {
         border: 1px solid #C3C6D7 !important;
         background: white !important;
@@ -210,9 +178,7 @@ st.markdown("""
         margin-bottom: 0.5rem !important;
     }
 
-    /* Primary Button */
     .stButton > button {
-        width: 100%;
         background: #004AC6 !important;
         color: white !important;
         padding: 1rem 1.5rem !important;
@@ -222,10 +188,6 @@ st.markdown("""
         border: none !important;
         box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05) !important;
         transition: all 0.2s !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 0.5rem !important;
     }
 
     .stButton > button:hover {
@@ -233,12 +195,6 @@ st.markdown("""
         transform: scale(0.98) !important;
     }
 
-    .stButton > button::before {
-        content: "🔍";
-        font-size: 1.25rem;
-    }
-
-    /* Feature Cards */
     .feature-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -279,7 +235,6 @@ st.markdown("""
         line-height: 1.5;
     }
 
-    /* Metrics */
     [data-testid="stMetricValue"] {
         font-size: 2rem !important;
         font-weight: 700 !important;
@@ -294,29 +249,6 @@ st.markdown("""
         color: #434655 !important;
     }
 
-    /* Filter Chips */
-    .stButton > button[kind="secondary"] {
-        background: #DAE2FD !important;
-        color: #5C647A !important;
-        border: none !important;
-        padding: 0.5rem 1rem !important;
-        border-radius: 9999px !important;
-        font-size: 0.875rem !important;
-        font-weight: 500 !important;
-        box-shadow: none !important;
-    }
-
-    .stButton > button[kind="primary"] {
-        background: #004AC6 !important;
-        color: white !important;
-        border: none !important;
-        padding: 0.5rem 1rem !important;
-        border-radius: 9999px !important;
-        font-size: 0.875rem !important;
-        font-weight: 500 !important;
-    }
-
-    /* Table */
     .dataframe {
         border: 1px solid #C3C6D7 !important;
         border-radius: 0.75rem !important;
@@ -343,12 +275,10 @@ st.markdown("""
         background: #F7F9FB !important;
     }
 
-    /* Progress */
     .stProgress > div > div {
         background: #004AC6 !important;
     }
 
-    /* Alert/Info */
     .stAlert {
         background: rgba(0, 74, 198, 0.1) !important;
         border: 1px solid rgba(0, 74, 198, 0.2) !important;
@@ -356,9 +286,7 @@ st.markdown("""
         color: #004AC6 !important;
     }
 
-    /* Download Button */
     .stDownloadButton > button {
-        width: 100%;
         background: white !important;
         color: #004AC6 !important;
         border: 2px solid #004AC6 !important;
@@ -372,7 +300,6 @@ st.markdown("""
         background: rgba(0, 74, 198, 0.05) !important;
     }
 
-    /* Expander for email modal */
     .streamlit-expanderHeader {
         background: #ECEEF0 !important;
         border: 1px solid #C3C6D7 !important;
@@ -416,22 +343,26 @@ yale.edu
 princeton.edu"""
 }
 
-# ==================== HELPER FUNCTIONS ====================
-
+# Helper functions
 def extract_domain_from_url(url_or_domain):
-    url_or_domain = url_or_domain.strip()
+    """Extract clean domain from URL or domain string"""
+    url_or_domain = str(url_or_domain).strip()
     url_or_domain = re.sub(r'^(https?://)?(www\.)?', '', url_or_domain, flags=re.IGNORECASE)
     url_or_domain = url_or_domain.split('/')[0].split('?')[0].split('#')[0].split(':')[0]
     return url_or_domain.lower()
 
 def parse_input_domains(raw_input):
-    entries = re.split(r'[,;\s\n]+', raw_input)
+    """Parse and clean list of URLs/domains"""
+    if not raw_input:
+        return []
+    entries = re.split(r'[,;\s
+]+', str(raw_input))
     domains = []
     for entry in entries:
         entry = entry.strip()
         if entry and len(entry) > 3:
             domain = extract_domain_from_url(entry)
-            if domain:
+            if domain and '.' in domain:
                 domains.append(domain)
     seen = set()
     unique_domains = []
@@ -442,22 +373,29 @@ def parse_input_domains(raw_input):
     return unique_domains
 
 def fetch_domain_content(domain, timeout=10):
+    """Fetch HTML content from domain"""
+    if not SCRAPING_AVAILABLE:
+        return "", "", 0
+
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-    urls_to_try = [f"https://{domain}", f"http://{domain}", f"https://www.{domain}", f"http://www.{domain}"]
+    urls_to_try = [f"https://{domain}", f"http://{domain}"]
+
     for url in urls_to_try:
         try:
             response = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
             if response.status_code == 200:
                 return response.text, url, response.status_code
-        except:
+        except Exception as e:
             continue
     return "", "", 0
 
 def extract_emails_from_html(html_content, domain):
+    """Extract emails from HTML"""
     email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
-    emails = re.findall(email_pattern, html_content)
+    emails = re.findall(email_pattern, str(html_content))
     domain_clean = domain.replace('www.', '')
     valid_emails = []
+
     for email in emails:
         email_lower = email.lower()
         if any(skip in email_lower for skip in ['example.com', 'yourdomain.com', '.png', '.jpg']):
@@ -467,84 +405,110 @@ def extract_emails_from_html(html_content, domain):
     return list(set(valid_emails))
 
 def scrape_contact_pages(domain, base_html):
+    """Scrape contact pages for emails"""
+    if not SCRAPING_AVAILABLE:
+        return []
+
     all_emails = extract_emails_from_html(base_html, domain)
-    contact_paths = ['/contact', '/contact-us', '/about', '/about-us', '/team']
+    contact_paths = ['/contact', '/contact-us', '/about']
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+
     for path in contact_paths:
         try:
             resp = requests.get(f"https://{domain}{path}", headers=headers, timeout=5)
             if resp.status_code == 200:
                 all_emails.extend(extract_emails_from_html(resp.text, domain))
-        except:
+        except Exception as e:
             continue
     return list(set(all_emails))[:10]
 
 def calculate_saas_score(domain, html_content=""):
-    score, signals = 0, []
-    domain_lower, html_lower = domain.lower(), html_content.lower()
-    if any(sub in domain_lower for sub in ['app.', 'dashboard.', 'portal.', 'console.']):
+    """Calculate SaaS score"""
+    score = 0
+    domain_lower = str(domain).lower()
+    html_lower = str(html_content).lower()
+
+    if any(sub in domain_lower for sub in ['app.', 'dashboard.', 'portal.']):
         score += 25
-    if any(path in html_lower for path in ['/pricing', '/plans', '/billing']):
+    if any(path in html_lower for path in ['/pricing', '/plans']):
         score += 10
-    if any(path in html_lower for path in ['/docs', '/api', '/developers']):
+    if any(path in html_lower for path in ['/docs', '/api']):
         score += 5
-    if 'schema.org/softwareapplication' in html_lower:
-        score += 15
-    if any(stack in html_lower for stack in ['intercom', 'drift', 'stripe', 'paddle']):
+    if any(stack in html_lower for stack in ['stripe', 'paddle']):
         score += 10
-    if any(kw in html_lower for kw in ['monthly', 'annual', 'per seat']):
-        score += 5
-    if any(kw in html_lower for kw in ['free trial', 'request demo', 'book a demo']):
+    if any(kw in html_lower for kw in ['free trial', 'demo']):
         score += 15
-    if any(kw in html_lower for kw in ['integrations', 'workflow', 'automate']):
-        score += 15
-    if domain_lower.endswith(('.edu', '.gov', '.mil')):
+    if domain_lower.endswith('.edu'):
         score -= 50
-    if any(kw in html_lower for kw in ['add to cart', 'free shipping']):
-        score -= 30
-    return max(0, min(100, score)), signals
+
+    return max(0, min(100, score))
 
 def classify_domain(domain, html_content=""):
-    domain_lower = domain.lower()
+    """Classify domain"""
+    domain_lower = str(domain).lower()
+
     if domain_lower.endswith('.edu'):
-        return 'Education', 100, []
+        return 'Education', 100
     if domain_lower.endswith(('.gov', '.mil')):
-        return 'Government', 100, []
+        return 'Government', 100
     if domain_lower.endswith('.org'):
-        return 'Organization', 60, []
-    saas_score, saas_signals = calculate_saas_score(domain, html_content)
+        return 'Organization', 60
+
+    saas_score = calculate_saas_score(domain, html_content)
     if saas_score >= 75:
-        return 'SaaS (Confirmed)', saas_score, saas_signals
+        return 'SaaS (Confirmed)', saas_score
     elif saas_score >= 50:
-        return 'SaaS (Probable)', saas_score, saas_signals
-    return 'General', 20, []
+        return 'SaaS (Probable)', saas_score
+
+    return 'General', 20
 
 def classify_email_department(email):
-    email_lower = email.lower().split('@')[0]
-    if any(kw in email_lower for kw in ['sales', 'demo', 'revenue']):
+    """Classify email by department"""
+    email_lower = str(email).lower().split('@')[0]
+
+    if any(kw in email_lower for kw in ['sales', 'demo']):
         return 'Sales'
-    if any(kw in email_lower for kw in ['support', 'help', 'customer']):
+    if any(kw in email_lower for kw in ['support', 'help']):
         return 'Support'
-    if any(kw in email_lower for kw in ['marketing', 'pr', 'seo', 'content']):
+    if any(kw in email_lower for kw in ['marketing', 'pr']):
         return 'Marketing'
     if any(kw in email_lower for kw in ['info', 'hello', 'contact']):
         return 'General/Info'
     return 'Other'
 
 def process_single_domain(domain):
+    """Process single domain"""
     try:
         html_content, final_url, status_code = fetch_domain_content(domain)
         if status_code == 0:
-            return {'domain': domain, 'status': 'Failed', 'category': 'Error', 'score': 0, 'emails': []}
-        category, score, signals = classify_domain(domain, html_content)
+            return {
+                'domain': domain,
+                'status': 'Failed',
+                'category': 'Error',
+                'score': 0,
+                'emails': []
+            }
+
+        category, score = classify_domain(domain, html_content)
         emails = scrape_contact_pages(domain, html_content)
-        return {'domain': domain, 'status': 'Success', 'category': category, 'score': score, 'emails': emails}
+
+        return {
+            'domain': domain,
+            'status': 'Success',
+            'category': category,
+            'score': score,
+            'emails': emails
+        }
     except Exception as e:
-        return {'domain': domain, 'status': 'Error', 'category': 'Error', 'score': 0, 'emails': []}
+        return {
+            'domain': domain,
+            'status': 'Error',
+            'category': 'Error',
+            'score': 0,
+            'emails': []
+        }
 
-# ==================== UI ====================
-
-# Top App Bar
+# UI Components
 st.markdown("""
 <div class="top-app-bar">
     <div class="logo">Domain Lens</div>
@@ -558,7 +522,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Hero Section
 st.markdown("""
 <div class="hero-section">
     <h1 class="hero-title">Bulk Domain Analysis</h1>
@@ -568,10 +531,8 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Main Analysis Card
 st.markdown('<div class="main-card">', unsafe_allow_html=True)
 
-# Header with sample buttons
 col_label, col_samples = st.columns([1, 2])
 with col_label:
     st.markdown('<div class="label-caps">Domains to Analyze</div>', unsafe_allow_html=True)
@@ -585,7 +546,6 @@ with col_samples:
                 st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Domain input
 domains_input = st.text_area(
     "domains",
     value=st.session_state.domain_input,
@@ -597,10 +557,9 @@ linear.app
     label_visibility="collapsed"
 )
 
-domains_list = parse_input_domains(domains_input) if domains_input else []
+domains_list = parse_input_domains(domains_input)
 st.markdown(f'<div class="domain-counter">{len(domains_list)} domain{"s" if len(domains_list) != 1 else ""} detected</div>', unsafe_allow_html=True)
 
-# Helper text
 st.markdown("""
 <div class="helper-text">
     <span style="font-size: 1rem;">ℹ️</span>
@@ -608,7 +567,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Optional inputs
 col1, col2 = st.columns(2)
 with col1:
     company_name = st.text_input("Your Company (Optional)", placeholder="e.g. Acme Inc")
@@ -617,12 +575,10 @@ with col2:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# CTA Button
-analyze_button = st.button("Analyze Domains", disabled=len(domains_list) == 0, use_container_width=True)
+analyze_button = st.button("🔍 Analyze Domains", disabled=len(domains_list) == 0, use_container_width=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Feature Cards
 if st.session_state.results_df is None:
     st.markdown("""
     <div class="feature-grid">
@@ -644,7 +600,6 @@ if st.session_state.results_df is None:
     </div>
     """, unsafe_allow_html=True)
 
-# Analysis logic
 if analyze_button and len(domains_list) > 0:
     st.markdown("---")
     st.markdown("### 🔄 Analyzing Domains...")
@@ -686,14 +641,12 @@ if analyze_button and len(domains_list) > 0:
     progress_bar.progress(1.0)
     status_text.success(f"✅ Analysis complete!")
 
-# Results display
 if st.session_state.results_df is not None:
     df = st.session_state.results_df
 
     st.markdown("---")
     st.markdown("### 📊 Results")
 
-    # Metrics
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric("DOMAINS", len(df))
@@ -710,7 +663,6 @@ if st.session_state.results_df is not None:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Filters
     st.markdown("**Filter by Category:**")
     all_categories = sorted(df['Category'].unique())
     cols_cat = st.columns(len(all_categories))
@@ -746,7 +698,6 @@ if st.session_state.results_df is not None:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Filter dataframe
     filtered_df = df.copy()
     if st.session_state.selected_categories:
         filtered_df = filtered_df[filtered_df['Category'].isin(st.session_state.selected_categories)]
@@ -758,7 +709,6 @@ if st.session_state.results_df is not None:
 
     st.info(f"📊 Showing {len(filtered_df)} domain(s) after filtering")
 
-    # Table
     table_data = []
     for idx, row in filtered_df.iterrows():
         contact_details = []
@@ -781,7 +731,7 @@ if st.session_state.results_df is not None:
         display_df = pd.DataFrame(table_data)[['Domain', 'Category', 'Contact Details']]
         st.markdown(display_df.to_markdown(), unsafe_allow_html=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<br><br>", unsafe_allow_html=True)
         st.markdown("**💌 Click to Draft Emails:**")
 
         for idx, row_data in enumerate(table_data):
@@ -808,7 +758,6 @@ if st.session_state.results_df is not None:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Export
     export_rows = []
     for row in filtered_df.itertuples():
         for email, dept in zip(row.Emails, row.Departments):
@@ -830,7 +779,6 @@ if st.session_state.results_df is not None:
         use_container_width=True
     )
 
-# Email Modal
 if st.session_state.show_email_modal and st.session_state.active_email_data:
     data = st.session_state.active_email_data
 
