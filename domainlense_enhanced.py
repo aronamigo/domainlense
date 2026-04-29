@@ -326,21 +326,9 @@ if 'selected_departments' not in st.session_state:
 
 # Sample data
 SAMPLES = {
-    "SaaS Competitors": """stripe.com
-vercel.com
-linear.app
-notion.so
-figma.com""",
-    "Local Businesses": """starbucks.com
-target.com
-walgreens.com
-cvs.com
-walmart.com""",
-    "Universities": """harvard.edu
-stanford.edu
-mit.edu
-yale.edu
-princeton.edu"""
+    "SaaS Competitors": "stripe.com\nvercel.com\nlinear.app\nnotion.so\nfigma.com",
+    "Local Businesses": "starbucks.com\ntarget.com\nwalgreens.com\ncvs.com\nwalmart.com",
+    "Universities": "harvard.edu\nstanford.edu\nmit.edu\nyale.edu\nprinceton.edu"
 }
 
 # Helper functions
@@ -355,8 +343,8 @@ def parse_input_domains(raw_input):
     """Parse and clean list of URLs/domains"""
     if not raw_input:
         return []
-    entries = re.split(r'[,;\s
-]+', str(raw_input))
+    # Split by comma, semicolon, space, or newline
+    entries = re.split(r'[,;\s\n]+', str(raw_input))
     domains = []
     for entry in entries:
         entry = entry.strip()
@@ -364,6 +352,7 @@ def parse_input_domains(raw_input):
             domain = extract_domain_from_url(entry)
             if domain and '.' in domain:
                 domains.append(domain)
+    # Remove duplicates
     seen = set()
     unique_domains = []
     for domain in domains:
@@ -385,7 +374,7 @@ def fetch_domain_content(domain, timeout=10):
             response = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
             if response.status_code == 200:
                 return response.text, url, response.status_code
-        except Exception as e:
+        except Exception:
             continue
     return "", "", 0
 
@@ -418,7 +407,7 @@ def scrape_contact_pages(domain, base_html):
             resp = requests.get(f"https://{domain}{path}", headers=headers, timeout=5)
             if resp.status_code == 200:
                 all_emails.extend(extract_emails_from_html(resp.text, domain))
-        except Exception as e:
+        except Exception:
             continue
     return list(set(all_emails))[:10]
 
@@ -499,7 +488,7 @@ def process_single_domain(domain):
             'score': score,
             'emails': emails
         }
-    except Exception as e:
+    except Exception:
         return {
             'domain': domain,
             'status': 'Error',
@@ -550,10 +539,7 @@ domains_input = st.text_area(
     "domains",
     value=st.session_state.domain_input,
     height=256,
-    placeholder="""stripe.com
-vercel.com
-linear.app
-...""",
+    placeholder="stripe.com\nvercel.com\nlinear.app\n...",
     label_visibility="collapsed"
 )
 
